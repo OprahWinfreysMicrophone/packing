@@ -1,0 +1,298 @@
+
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Packing lists in draggable columns with quantities</h2>
+<div style="padding: 1rem 0; font-family: var(--font-sans);">
+
+<div style="display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <button onclick="switchPerson('alaina')" id="tab-alaina" style="padding: 6px 16px; font-size: 14px; font-weight: 500; border-radius: var(--border-radius-md); border: 1.5px solid var(--color-border-info); color: var(--color-text-info); background: var(--color-background-info);">Alaina</button>
+  <button onclick="switchPerson('jamie')" id="tab-jamie" style="padding: 6px 16px; font-size: 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); background: transparent;">Jamie</button>
+  <button onclick="switchPerson('lincoln')" id="tab-lincoln" style="padding: 6px 16px; font-size: 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); background: transparent;">Lincoln</button>
+  <button onclick="switchPerson('household')" id="tab-household" style="padding: 6px 16px; font-size: 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); background: transparent;">Household</button>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 2rem;">
+  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 1rem; min-height: 600px; display: flex; flex-direction: column;">
+    <div style="font-size: 16px; font-weight: 500; margin-bottom: 1rem; color: var(--color-text-primary);">Road Trip Bag</div>
+    <div id="roadtripbag-column" style="flex: 1;"></div>
+  </div>
+  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 1rem; min-height: 600px; display: flex; flex-direction: column;">
+    <div style="font-size: 16px; font-weight: 500; margin-bottom: 1rem; color: var(--color-text-primary);">Oregon Bag</div>
+    <div id="oregonbag-column" style="flex: 1;"></div>
+  </div>
+  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 1rem; min-height: 600px; display: flex; flex-direction: column;">
+    <div style="font-size: 16px; font-weight: 500; margin-bottom: 1rem; color: var(--color-text-primary);">Trip</div>
+    <div id="trip-column" style="flex: 1;"></div>
+  </div>
+</div>
+
+<div style="border-top: 0.5px solid var(--color-border-tertiary); padding-top: 1rem;">
+  <div style="font-size: 12px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">add item</div>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <input type="text" id="new-item-input" placeholder="Item name..." style="flex: 1; min-width: 140px;" onkeydown="if(event.key==='Enter')addItem()" />
+    <select id="new-item-cat" style="min-width: 110px;">
+      <option value="clothing">Clothing</option>
+      <option value="toiletries">Toiletries</option>
+      <option value="documents">Documents</option>
+      <option value="electronics">Electronics</option>
+      <option value="medications">Medications</option>
+      <option value="misc">Misc</option>
+    </select>
+    <select id="new-item-trip" style="min-width: 120px;">
+      <option value="roadtripbag">Road Trip Bag</option>
+      <option value="oregonbag">Oregon Bag</option>
+      <option value="trip">Trip</option>
+    </select>
+    <button onclick="addItem()" style="padding: 6px 16px; font-size: 14px;">+ add</button>
+  </div>
+</div>
+
+</div>
+
+<style>
+.pack-item {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 8px 10px;
+  margin-bottom: 5px;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+  transition: opacity 0.15s;
+}
+.pack-item.dragging { opacity: 0.4; }
+.pack-item.done { opacity: 0.4; }
+.pack-check {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 1.5px solid var(--color-border-secondary);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; cursor: pointer;
+}
+.pack-item.done .pack-check { background: var(--color-background-success); border-color: var(--color-border-success); }
+.pack-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-text-success); display: none; }
+.pack-item.done .pack-dot { display: block; }
+.pack-label { font-size: 13px; color: var(--color-text-primary); flex: 1; cursor: pointer; min-width: 0; }
+.pack-label input { font-size: 13px; padding: 3px 6px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); width: 100%; }
+.pack-item.done .pack-label { text-decoration: line-through; color: var(--color-text-tertiary); }
+.qty-select { font-size: 12px; padding: 2px 2px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-primary); width: 46px; flex-shrink: 0; cursor: pointer; }
+.edit-btn, .remove-btn { font-size: 12px; background: none; border: none; cursor: pointer; padding: 2px 4px; color: var(--color-text-secondary); flex-shrink: 0; }
+.edit-btn:hover, .remove-btn:hover { color: var(--color-text-primary); }
+</style>
+
+<script>
+const CAT_ORDER = ['clothing','toiletries','documents','electronics','medications','misc'];
+let activePerson = 'alaina';
+let draggedItem = null;
+
+function getState() {
+  try { return JSON.parse(localStorage.getItem('pack_state_columns') || '{}'); } catch { return {}; }
+}
+function saveState(s) { try { localStorage.setItem('pack_state_columns', JSON.stringify(s)); } catch {} }
+
+function getLists() {
+  const s = getState();
+  if (!s._lists) return buildEmpty();
+  ['alaina','jamie','lincoln','household'].forEach(person => {
+    if (!s._lists[person]) s._lists[person] = {roadtripbag:{},oregonbag:{},trip:{}};
+    ['roadtripbag','oregonbag','trip'].forEach(trip => {
+      if (!s._lists[person][trip]) s._lists[person][trip] = {};
+      CAT_ORDER.forEach(c => { if (!s._lists[person][trip][c]) s._lists[person][trip][c] = []; });
+    });
+  });
+  return s._lists;
+}
+
+function buildEmpty() {
+  const e = {};
+  ['alaina','jamie','lincoln','household'].forEach(p => {
+    e[p] = {};
+    ['roadtripbag','oregonbag','trip'].forEach(t => {
+      e[p][t] = {};
+      CAT_ORDER.forEach(c => { e[p][t][c] = []; });
+    });
+  });
+  return e;
+}
+
+function saveLists(lists) { const s = getState(); s._lists = lists; saveState(s); }
+function getChecked() { const s = getState(); return s._checked || {}; }
+function saveChecked(c) { const s = getState(); s._checked = c; saveState(s); }
+function getQtys() { const s = getState(); return s._qtys || {}; }
+function saveQtys(q) { const s = getState(); s._qtys = q; saveState(s); }
+
+function itemKey(person, trip, cat, label) { return person+'__'+trip+'__'+cat+'__'+label; }
+function qtyKey(person, trip, cat, label) { return 'qty__'+person+'__'+trip+'__'+cat+'__'+label; }
+
+function toggleItem(person, trip, cat, label) {
+  const c = getChecked();
+  const k = itemKey(person, trip, cat, label);
+  c[k] = !c[k];
+  saveChecked(c);
+  render();
+}
+
+function setQty(person, trip, cat, label, val) {
+  const q = getQtys();
+  q[qtyKey(person, trip, cat, label)] = val;
+  saveQtys(q);
+}
+
+function removeItem(person, trip, cat, label) {
+  const lists = getLists();
+  lists[person][trip][cat] = lists[person][trip][cat].filter(i => i !== label);
+  saveLists(lists);
+  render();
+}
+
+function editItem(person, trip, cat, oldLabel, inputEl) {
+  const newLabel = inputEl.value.trim();
+  if (!newLabel) { render(); return; }
+  if (newLabel === oldLabel) { render(); return; }
+  const lists = getLists();
+  const idx = (lists[person][trip][cat] || []).indexOf(oldLabel);
+  if (idx >= 0) {
+    lists[person][trip][cat][idx] = newLabel;
+    const c = getChecked();
+    const q = getQtys();
+    const ok = itemKey(person, trip, cat, oldLabel);
+    const nk = itemKey(person, trip, cat, newLabel);
+    const oq = qtyKey(person, trip, cat, oldLabel);
+    const nq = qtyKey(person, trip, cat, newLabel);
+    if (c[ok]) { c[nk] = true; delete c[ok]; saveChecked(c); }
+    if (q[oq]) { q[nq] = q[oq]; delete q[oq]; saveQtys(q); }
+    saveLists(lists);
+  }
+  render();
+}
+
+function addItem() {
+  const input = document.getElementById('new-item-input');
+  const cat = document.getElementById('new-item-cat').value;
+  const trip = document.getElementById('new-item-trip').value;
+  const label = input.value.trim();
+  if (!label) return;
+  const lists = getLists();
+  if (!lists[activePerson][trip][cat]) lists[activePerson][trip][cat] = [];
+  if (!lists[activePerson][trip][cat].includes(label)) lists[activePerson][trip][cat].push(label);
+  saveLists(lists);
+  input.value = '';
+  render();
+}
+
+function switchPerson(p) {
+  activePerson = p;
+  ['alaina','jamie','lincoln','household'].forEach(name => {
+    const tab = document.getElementById('tab-'+name);
+    if (name === p) {
+      tab.style.border = '1.5px solid var(--color-border-info)';
+      tab.style.color = 'var(--color-text-info)';
+      tab.style.background = 'var(--color-background-info)';
+      tab.style.fontWeight = '500';
+    } else {
+      tab.style.border = '0.5px solid var(--color-border-secondary)';
+      tab.style.color = 'var(--color-text-secondary)';
+      tab.style.background = 'transparent';
+      tab.style.fontWeight = '400';
+    }
+  });
+  render();
+}
+
+function makeQtySelect(person, trip, cat, label) {
+  const q = getQtys();
+  const val = q[qtyKey(person, trip, cat, label)] || '1';
+  const sel = document.createElement('select');
+  sel.className = 'qty-select';
+  for (let i = 1; i <= 20; i++) {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = 'x' + i;
+    if (String(i) === String(val)) o.selected = true;
+    sel.appendChild(o);
+  }
+  sel.onchange = (e) => { e.stopPropagation(); setQty(person, trip, cat, label, sel.value); };
+  sel.onclick = (e) => e.stopPropagation();
+  return sel;
+}
+
+function renderColumn(trip, containerId) {
+  const lists = getLists();
+  const checked = getChecked();
+  const person = activePerson;
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+
+  if (!lists[person] || !lists[person][trip]) return;
+
+  const allItems = [];
+  CAT_ORDER.forEach(cat => {
+    (lists[person][trip][cat] || []).forEach(label => allItems.push({cat, label}));
+  });
+
+  allItems.forEach(({cat, label}) => {
+    const k = itemKey(person, trip, cat, label);
+    const isDone = !!checked[k];
+    const div = document.createElement('div');
+    div.className = 'pack-item' + (isDone ? ' done' : '');
+    div.draggable = true;
+    div.innerHTML = `<div class="pack-check"><div class="pack-dot"></div></div><span class="pack-label">${label}</span><button class="edit-btn">edit</button><button class="remove-btn">x</button>`;
+
+    const qty = makeQtySelect(person, trip, cat, label);
+    div.insertBefore(qty, div.querySelector('.edit-btn'));
+
+    div.addEventListener('dragstart', (e) => {
+      draggedItem = {trip, cat, label};
+      div.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    div.addEventListener('dragend', () => { div.classList.remove('dragging'); });
+
+    div.querySelector('.pack-check').onclick = (e) => { e.stopPropagation(); toggleItem(person, trip, cat, label); };
+    div.querySelector('.pack-label').onclick = (e) => { e.stopPropagation(); toggleItem(person, trip, cat, label); };
+
+    div.querySelector('.edit-btn').onclick = (e) => {
+      e.stopPropagation();
+      const labelSpan = div.querySelector('.pack-label');
+      labelSpan.innerHTML = `<input type="text" value="${label}" />`;
+      const input = labelSpan.querySelector('input');
+      input.focus(); input.select();
+      input.onblur = () => editItem(person, trip, cat, label, input);
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') editItem(person, trip, cat, label, input);
+        if (e.key === 'Escape') render();
+      };
+    };
+
+    div.querySelector('.remove-btn').onclick = (e) => { e.stopPropagation(); removeItem(person, trip, cat, label); };
+
+    container.appendChild(div);
+  });
+
+  container.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+  container.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (draggedItem) {
+      const {trip: fromTrip, cat, label} = draggedItem;
+      if (fromTrip !== trip) {
+        const lists = getLists();
+        if (!lists[activePerson][trip][cat]) lists[activePerson][trip][cat] = [];
+        if (!lists[activePerson][trip][cat].includes(label)) {
+          lists[activePerson][trip][cat].push(label);
+          lists[activePerson][fromTrip][cat] = (lists[activePerson][fromTrip][cat] || []).filter(i => i !== label);
+          saveLists(lists);
+          render();
+        }
+      }
+    }
+  });
+}
+
+function render() {
+  renderColumn('roadtripbag', 'roadtripbag-column');
+  renderColumn('oregonbag', 'oregonbag-column');
+  renderColumn('trip', 'trip-column');
+}
+
+render();
+</script>
