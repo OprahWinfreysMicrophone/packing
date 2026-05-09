@@ -27,67 +27,87 @@
     font-family: 'Segoe UI', system-ui, sans-serif;
     background: var(--bg); color: var(--text);
     min-height: 100vh; padding: 1.5rem 1rem;
-    max-width: 640px; margin: 0 auto;
+    margin: 0 auto;
   }
   h1 { font-size: 22px; font-weight: 600; margin-bottom: 1.5rem; }
-  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
-  .trip-tabs { margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+  .person-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
   button.tab {
     padding: 6px 16px; font-size: 14px; border-radius: var(--radius);
     border: 1px solid var(--border); background: var(--surface);
     color: var(--text2); cursor: pointer; font-family: inherit; transition: all 0.1s;
   }
   button.tab:hover { border-color: #aaa; color: var(--text); }
-  button.tab.active-person {
+  button.tab.active {
     border: 1.5px solid var(--accent-border); background: var(--accent-bg);
     color: var(--accent); font-weight: 600;
   }
-  button.tab.active-trip {
-    border: 1.5px solid var(--green-border); background: var(--green-bg);
-    color: var(--green); font-weight: 600;
+
+  /* 3-column layout for regular people */
+  .columns-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 2rem;
   }
-  .list-wrap {
+  /* 1-column layout for Car */
+  .columns-1 {
+    display: grid;
+    grid-template-columns: minmax(0, 480px);
+    gap: 16px;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 700px) {
+    .columns-3, .columns-1 { grid-template-columns: 1fr; }
+  }
+
+  .column {
     background: var(--surface2); border-radius: var(--radius-lg);
-    padding: 1rem; min-height: 300px; margin-bottom: 1.5rem;
+    padding: 1rem; min-height: 400px; display: flex; flex-direction: column;
   }
-  .progress { font-size: 13px; color: var(--text3); margin-bottom: 1rem; }
+  .column-title { font-size: 15px; font-weight: 600; margin-bottom: 0.5rem; color: var(--text); }
+  .column-progress { font-size: 12px; color: var(--text3); margin-bottom: 1rem; }
+  .column-body { flex: 1; }
+  .column-body.drag-over { background: #e0f2fe; border-radius: var(--radius); }
+
   .pack-item {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 10px 12px; margin-bottom: 6px;
-    display: flex; align-items: center; gap: 8px;
-    transition: opacity 0.15s, box-shadow 0.1s;
+    border-radius: var(--radius); padding: 8px 10px; margin-bottom: 5px;
+    cursor: move; display: flex; align-items: center; gap: 6px;
+    user-select: none; transition: opacity 0.15s, box-shadow 0.1s;
   }
   .pack-item:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .pack-item.dragging { opacity: 0.4; }
   .pack-item.done { opacity: 0.45; }
   .pack-check {
-    width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #ccc;
+    width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid #ccc;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; cursor: pointer; background: #fff; transition: all 0.1s;
   }
   .pack-item.done .pack-check { background: var(--green-bg); border-color: var(--green-border); }
-  .pack-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: none; }
+  .pack-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: none; }
   .pack-item.done .pack-dot { display: block; }
   .pack-label {
-    font-size: 14px; color: var(--text); flex: 1; cursor: pointer;
+    font-size: 13px; color: var(--text); flex: 1; cursor: pointer;
     min-width: 0; word-break: break-word;
   }
   .pack-item.done .pack-label { text-decoration: line-through; color: var(--text3); }
   .pack-label input {
-    font-size: 14px; padding: 3px 6px; border: 1px solid #ccc;
+    font-size: 13px; padding: 3px 6px; border: 1px solid #ccc;
     border-radius: var(--radius); width: 100%; font-family: inherit;
   }
   .qty-select {
     font-size: 12px; padding: 2px; border: 1px solid var(--border);
     border-radius: var(--radius); background: var(--surface2); color: var(--text);
-    width: 48px; flex-shrink: 0; cursor: pointer; font-family: inherit;
+    width: 46px; flex-shrink: 0; cursor: pointer; font-family: inherit;
   }
   .edit-btn, .remove-btn {
     font-size: 12px; background: none; border: none; cursor: pointer;
-    padding: 2px 5px; color: var(--text3); flex-shrink: 0; font-family: inherit;
+    padding: 2px 4px; color: var(--text3); flex-shrink: 0; font-family: inherit;
   }
   .edit-btn:hover { color: var(--accent); }
   .remove-btn:hover { color: #dc2626; }
   .empty-hint { font-size: 13px; color: var(--text3); text-align: center; padding: 2rem 0; }
+
   .add-section { border-top: 1px solid var(--border); padding-top: 1rem; }
   .add-label {
     font-size: 11px; font-weight: 600; text-transform: uppercase;
@@ -112,12 +132,9 @@
 <body>
 
 <h1>Packing List</h1>
-<div class="tabs" id="person-tabs"></div>
-<div class="tabs trip-tabs" id="trip-tabs"></div>
-<div class="list-wrap">
-  <div class="progress" id="progress"></div>
-  <div id="list-body"></div>
-</div>
+<div class="person-tabs" id="person-tabs"></div>
+<div id="columns-wrap"></div>
+
 <div class="add-section">
   <div class="add-label">Add item</div>
   <div class="add-row">
@@ -130,23 +147,21 @@
       <option value="medications">Medications</option>
       <option value="misc">Misc</option>
     </select>
+    <select id="new-item-trip" style="display:none;">
+      <option value="roadtripbag">Road Trip Bag</option>
+      <option value="oregonbag">Oregon Bag</option>
+      <option value="trip">Trip</option>
+    </select>
     <button onclick="addItem()">+ Add</button>
   </div>
 </div>
 
 <script>
 const CAT_ORDER = ['clothing','toiletries','documents','electronics','medications','misc'];
-
-// Internal keys match existing localStorage data exactly — do not change
 const PEOPLE = ['alaina','jamie','lincoln','household'];
-
-// Display labels — household shows as "Car"
 const PERSON_LABELS = {alaina:'Alaina', jamie:'Jamie', lincoln:'Lincoln', household:'Car'};
-
 const TRIPS = ['roadtripbag','oregonbag','trip'];
 const TRIP_LABELS = {roadtripbag:'Road Trip Bag', oregonbag:'Oregon Bag', trip:'Trip'};
-
-// Storage key matches existing data — do not change
 const STORAGE_KEY = 'packing_v2';
 
 const DEFAULT_LISTS = {
@@ -175,26 +190,15 @@ const DEFAULT_LISTS = {
     misc: ['Comfort item/stuffed animal','Fidget/sensory toy','Snacks (safe foods)','Water bottle','Activity book or coloring']
   },
   household: {
-    clothing: [],
-    toiletries: [],
+    clothing: [], toiletries: [], medications: [],
     documents: ['Car registration/insurance','AAA card (if member)'],
     electronics: ['Car phone charger','Flashlight + batteries'],
-    medications: [],
     misc: ['First aid kit','Tissues/paper towels','Trash bags','Hand sanitizer','Wet wipes','Cooler + ice packs','Snacks for car','Cash for tolls']
   }
 };
 
 let activePerson = 'alaina';
-let activeTrip = 'roadtripbag';
-
-function buildEmpty() {
-  const e = {};
-  PEOPLE.forEach(p => {
-    e[p] = {};
-    TRIPS.forEach(t => { e[p][t] = {}; CAT_ORDER.forEach(c => { e[p][t][c] = []; }); });
-  });
-  return e;
-}
+let draggedItem = null;
 
 function getState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; } }
 function saveState(s) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {} }
@@ -202,14 +206,14 @@ function saveState(s) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s
 function getLists() {
   const s = getState();
   if (!s._lists) {
-    const lists = buildEmpty();
+    const lists = {};
     PEOPLE.forEach(p => {
+      lists[p] = {};
       const def = DEFAULT_LISTS[p] || {};
-      TRIPS.forEach(t => { CAT_ORDER.forEach(c => { lists[p][t][c] = def[c] ? [...def[c]] : []; }); });
+      TRIPS.forEach(t => { lists[p][t] = {}; CAT_ORDER.forEach(c => { lists[p][t][c] = def[c] ? [...def[c]] : []; }); });
     });
     s._lists = lists; saveState(s); return lists;
   }
-  // Ensure all keys exist without overwriting existing data
   PEOPLE.forEach(p => {
     if (!s._lists[p]) s._lists[p] = {};
     TRIPS.forEach(t => {
@@ -229,15 +233,15 @@ function iKey(p,t,c,l) { return p+'|'+t+'|'+c+'|'+l; }
 function qKey(p,t,c,l) { return 'q|'+p+'|'+t+'|'+c+'|'+l; }
 
 function toggleItem(p,t,c,l) {
-  const ch = getChecked(); ch[iKey(p,t,c,l)] = !ch[iKey(p,t,c,l)]; saveChecked(ch); renderList();
+  const ch = getChecked(); ch[iKey(p,t,c,l)] = !ch[iKey(p,t,c,l)]; saveChecked(ch); render();
 }
 function setQty(p,t,c,l,v) { const q = getQtys(); q[qKey(p,t,c,l)] = v; saveQtys(q); }
 function removeItem(p,t,c,l) {
   const lists = getLists(); lists[p][t][c] = lists[p][t][c].filter(i => i !== l);
-  saveLists(lists); renderList();
+  saveLists(lists); render();
 }
 function editItem(p,t,c,oldL,inp) {
-  const newL = inp.value.trim(); if (!newL) { renderList(); return; }
+  const newL = inp.value.trim(); if (!newL) { render(); return; }
   const lists = getLists(); const idx = lists[p][t][c].indexOf(oldL);
   if (idx >= 0) {
     lists[p][t][c][idx] = newL;
@@ -248,113 +252,181 @@ function editItem(p,t,c,oldL,inp) {
     if (q[oq]) { q[nq] = q[oq]; delete q[oq]; saveQtys(q); }
     saveLists(lists);
   }
-  renderList();
+  render();
 }
+
 function addItem() {
   const input = document.getElementById('new-item-input');
   const cat = document.getElementById('new-item-cat').value;
   const label = input.value.trim(); if (!label) return;
   const lists = getLists();
-  if (!lists[activePerson][activeTrip][cat].includes(label))
-    lists[activePerson][activeTrip][cat].push(label);
-  saveLists(lists); input.value = ''; renderList();
+  const isCar = activePerson === 'household';
+  const trip = isCar ? 'roadtripbag' : document.getElementById('new-item-trip').value;
+  if (!lists[activePerson][trip][cat].includes(label)) lists[activePerson][trip][cat].push(label);
+  saveLists(lists); input.value = ''; render();
 }
 
 function switchPerson(p) {
   activePerson = p;
   document.querySelectorAll('#person-tabs button').forEach(b =>
-    b.classList.toggle('active-person', b.dataset.key === p));
-  renderList();
+    b.classList.toggle('active', b.dataset.key === p));
+  // show/hide trip selector in add form
+  document.getElementById('new-item-trip').style.display = (p === 'household') ? 'none' : '';
+  render();
 }
-function switchTrip(t) {
-  activeTrip = t;
-  document.querySelectorAll('#trip-tabs button').forEach(b =>
-    b.classList.toggle('active-trip', b.dataset.key === t));
-  renderList();
+
+function makeItem(p, t, cat, label) {
+  const checked = getChecked(); const qtys = getQtys();
+  const isDone = !!checked[iKey(p,t,cat,label)];
+  const qv = qtys[qKey(p,t,cat,label)] || '1';
+
+  const div = document.createElement('div');
+  div.className = 'pack-item' + (isDone ? ' done' : '');
+  div.draggable = activePerson !== 'household';
+
+  const chk = document.createElement('div'); chk.className = 'pack-check';
+  const dot = document.createElement('div'); dot.className = 'pack-dot';
+  chk.appendChild(dot);
+  chk.onclick = (e) => { e.stopPropagation(); toggleItem(p,t,cat,label); };
+
+  const lbl = document.createElement('span'); lbl.className = 'pack-label';
+  lbl.textContent = label;
+  lbl.onclick = (e) => { e.stopPropagation(); toggleItem(p,t,cat,label); };
+
+  const sel = document.createElement('select'); sel.className = 'qty-select';
+  for (let i = 1; i <= 20; i++) {
+    const o = document.createElement('option'); o.value = i; o.textContent = 'x'+i;
+    if (String(i) === String(qv)) o.selected = true; sel.appendChild(o);
+  }
+  sel.onchange = (e) => { e.stopPropagation(); setQty(p,t,cat,label,sel.value); };
+  sel.onclick = (e) => e.stopPropagation();
+
+  const editBtn = document.createElement('button'); editBtn.className = 'edit-btn'; editBtn.textContent = 'edit';
+  editBtn.onclick = (e) => {
+    e.stopPropagation(); lbl.innerHTML = '';
+    const inp = document.createElement('input'); inp.type = 'text'; inp.value = label;
+    lbl.appendChild(inp); inp.focus(); inp.select();
+    inp.onblur = () => editItem(p,t,cat,label,inp);
+    inp.onkeydown = (ev) => {
+      if (ev.key === 'Enter') editItem(p,t,cat,label,inp);
+      if (ev.key === 'Escape') render();
+      ev.stopPropagation();
+    };
+    inp.onclick = (e) => e.stopPropagation();
+  };
+
+  const rmBtn = document.createElement('button'); rmBtn.className = 'remove-btn'; rmBtn.textContent = 'x';
+  rmBtn.onclick = (e) => { e.stopPropagation(); removeItem(p,t,cat,label); };
+
+  if (activePerson !== 'household') {
+    div.addEventListener('dragstart', (e) => {
+      draggedItem = {trip:t, cat, label};
+      div.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move';
+    });
+    div.addEventListener('dragend', () => div.classList.remove('dragging'));
+  }
+
+  div.appendChild(chk); div.appendChild(lbl); div.appendChild(sel);
+  div.appendChild(editBtn); div.appendChild(rmBtn);
+  return div;
+}
+
+function makeColumn(p, trip, titleText) {
+  const lists = getLists(); const checked = getChecked();
+  const col = document.createElement('div'); col.className = 'column';
+
+  const title = document.createElement('div'); title.className = 'column-title';
+  title.textContent = titleText; col.appendChild(title);
+
+  const allItems = [];
+  CAT_ORDER.forEach(cat => { (lists[p][trip][cat]||[]).forEach(label => allItems.push({cat,label})); });
+  const doneCount = allItems.filter(({cat,label}) => checked[iKey(p,trip,cat,label)]).length;
+
+  const prog = document.createElement('div'); prog.className = 'column-progress';
+  prog.textContent = doneCount + ' / ' + allItems.length + ' packed'; col.appendChild(prog);
+
+  const body = document.createElement('div'); body.className = 'column-body';
+
+  if (!allItems.length) {
+    body.innerHTML = '<div class="empty-hint">Empty</div>';
+  } else {
+    allItems.forEach(({cat,label}) => body.appendChild(makeItem(p, trip, cat, label)));
+  }
+
+  if (p !== 'household') {
+    body.addEventListener('dragover', (e) => { e.preventDefault(); body.classList.add('drag-over'); });
+    body.addEventListener('dragleave', () => body.classList.remove('drag-over'));
+    body.addEventListener('drop', (e) => {
+      e.preventDefault(); body.classList.remove('drag-over');
+      if (!draggedItem) return;
+      const {trip: fromTrip, cat, label} = draggedItem;
+      if (fromTrip === trip) return;
+      const lists = getLists();
+      if (!lists[p][trip][cat]) lists[p][trip][cat] = [];
+      if (!lists[p][trip][cat].includes(label)) {
+        lists[p][trip][cat].push(label);
+        lists[p][fromTrip][cat] = lists[p][fromTrip][cat].filter(i => i !== label);
+        saveLists(lists); render();
+      }
+    });
+  }
+
+  col.appendChild(body);
+  return col;
+}
+
+function render() {
+  const wrap = document.getElementById('columns-wrap');
+  wrap.innerHTML = '';
+  const p = activePerson;
+  const isCar = p === 'household';
+
+  const grid = document.createElement('div');
+  grid.className = isCar ? 'columns-1' : 'columns-3';
+
+  if (isCar) {
+    // Single combined column for Car — merge all 3 trips into one flat list
+    const col = document.createElement('div'); col.className = 'column';
+    const title = document.createElement('div'); title.className = 'column-title';
+    title.textContent = 'Car'; col.appendChild(title);
+
+    const lists = getLists(); const checked = getChecked();
+    const allItems = [];
+    CAT_ORDER.forEach(cat => {
+      // use roadtripbag as the single store for Car
+      (lists[p]['roadtripbag'][cat]||[]).forEach(label => allItems.push({cat,label}));
+    });
+    const doneCount = allItems.filter(({cat,label}) => checked[iKey(p,'roadtripbag',cat,label)]).length;
+    const prog = document.createElement('div'); prog.className = 'column-progress';
+    prog.textContent = doneCount + ' / ' + allItems.length + ' packed'; col.appendChild(prog);
+
+    const body = document.createElement('div'); body.className = 'column-body';
+    if (!allItems.length) {
+      body.innerHTML = '<div class="empty-hint">Empty — add items below</div>';
+    } else {
+      allItems.forEach(({cat,label}) => body.appendChild(makeItem(p,'roadtripbag',cat,label)));
+    }
+    col.appendChild(body);
+    grid.appendChild(col);
+  } else {
+    TRIPS.forEach(t => grid.appendChild(makeColumn(p, t, TRIP_LABELS[t])));
+  }
+
+  wrap.appendChild(grid);
 }
 
 function renderTabs() {
   const pt = document.getElementById('person-tabs');
   PEOPLE.forEach(p => {
     const btn = document.createElement('button');
-    btn.className = 'tab' + (p === activePerson ? ' active-person' : '');
+    btn.className = 'tab' + (p === activePerson ? ' active' : '');
     btn.textContent = PERSON_LABELS[p]; btn.dataset.key = p;
     btn.onclick = () => switchPerson(p); pt.appendChild(btn);
-  });
-  const tt = document.getElementById('trip-tabs');
-  TRIPS.forEach(t => {
-    const btn = document.createElement('button');
-    btn.className = 'tab' + (t === activeTrip ? ' active-trip' : '');
-    btn.textContent = TRIP_LABELS[t]; btn.dataset.key = t;
-    btn.onclick = () => switchTrip(t); tt.appendChild(btn);
-  });
-}
-
-function renderList() {
-  const lists = getLists(); const checked = getChecked(); const qtys = getQtys();
-  const p = activePerson; const t = activeTrip;
-  const body = document.getElementById('list-body');
-  body.innerHTML = '';
-
-  const allItems = [];
-  CAT_ORDER.forEach(cat => { (lists[p][t][cat] || []).forEach(label => allItems.push({cat,label})); });
-
-  const doneCount = allItems.filter(({cat,label}) => checked[iKey(p,t,cat,label)]).length;
-  document.getElementById('progress').textContent = doneCount + ' / ' + allItems.length + ' packed';
-
-  if (!allItems.length) {
-    body.innerHTML = '<div class="empty-hint">Nothing here yet — add items below</div>'; return;
-  }
-
-  allItems.forEach(({cat,label}) => {
-    const isDone = !!checked[iKey(p,t,cat,label)];
-    const qv = qtys[qKey(p,t,cat,label)] || '1';
-
-    const div = document.createElement('div');
-    div.className = 'pack-item' + (isDone ? ' done' : '');
-
-    const chk = document.createElement('div'); chk.className = 'pack-check';
-    const dot = document.createElement('div'); dot.className = 'pack-dot';
-    chk.appendChild(dot);
-    chk.onclick = (e) => { e.stopPropagation(); toggleItem(p,t,cat,label); };
-
-    const lbl = document.createElement('span'); lbl.className = 'pack-label';
-    lbl.textContent = label;
-    lbl.onclick = (e) => { e.stopPropagation(); toggleItem(p,t,cat,label); };
-
-    const sel = document.createElement('select'); sel.className = 'qty-select';
-    for (let i = 1; i <= 20; i++) {
-      const o = document.createElement('option'); o.value = i; o.textContent = 'x'+i;
-      if (String(i) === String(qv)) o.selected = true; sel.appendChild(o);
-    }
-    sel.onchange = (e) => { e.stopPropagation(); setQty(p,t,cat,label,sel.value); };
-    sel.onclick = (e) => e.stopPropagation();
-
-    const editBtn = document.createElement('button'); editBtn.className = 'edit-btn'; editBtn.textContent = 'edit';
-    editBtn.onclick = (e) => {
-      e.stopPropagation(); lbl.innerHTML = '';
-      const inp = document.createElement('input'); inp.type = 'text'; inp.value = label;
-      lbl.appendChild(inp); inp.focus(); inp.select();
-      inp.onblur = () => editItem(p,t,cat,label,inp);
-      inp.onkeydown = (ev) => {
-        if (ev.key === 'Enter') editItem(p,t,cat,label,inp);
-        if (ev.key === 'Escape') renderList();
-        ev.stopPropagation();
-      };
-      inp.onclick = (e) => e.stopPropagation();
-    };
-
-    const rmBtn = document.createElement('button'); rmBtn.className = 'remove-btn'; rmBtn.textContent = 'x';
-    rmBtn.onclick = (e) => { e.stopPropagation(); removeItem(p,t,cat,label); };
-
-    div.appendChild(chk); div.appendChild(lbl); div.appendChild(sel);
-    div.appendChild(editBtn); div.appendChild(rmBtn);
-    body.appendChild(div);
   });
 }
 
 renderTabs();
-renderList();
+render();
 </script>
 </body>
 </html>
